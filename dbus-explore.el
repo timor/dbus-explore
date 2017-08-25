@@ -79,13 +79,20 @@
 
 ;; #+BEGIN_SRC emacs-lisp
 (defun dbus-explore-format-signal/method-node (name args)
-  (let ((arg-string (string-join (loop for arg in args
-				       for arg-list = (second arg)
-				       collect (format "%s %s"
-						       (alist-get 'type arg-list)
-						       (alist-get 'name arg-list)))
-				 ", ")))
-    (format "%s(%s)" name arg-string)))
+  (destructuring-bind (out-args in-args)
+      (loop for arg in args
+	    for arg-list = (second arg)
+	    for out = (string-equal "out" (alist-get 'direction arg-list))
+	    for type = (alist-get 'type arg-list)
+	    for name = (alist-get 'name arg-list)
+	    for formatted = (format "%s %s" type name)
+	    if out
+	    collect formatted into out-args else
+	    collect formatted into in-args
+	    finally return (list out-args in-args))
+    (format "%s(%s)%s" name (string-join in-args ", ")
+	    (if out-args (format " = (%s)" (string-join out-args ", "))
+	      ""))))
 ;; #+END_SRC
 
 ;; #+BEGIN_SRC emacs-lisp
