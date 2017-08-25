@@ -74,11 +74,11 @@
 ;; Interfaces can have multiple kinds of information: Signals, Properties
 ;; and Methods.
 
-;; For Signals, emacs returns a parsed xml-expression.  This is formatted
+;; For signals and methods, emacs returns a parsed xml-expression.  This is formatted
 ;; into a signature as follows:
 
 ;; #+BEGIN_SRC emacs-lisp
-(defun dbus-explore-format-signal-node (name args)
+(defun dbus-explore-format-signal/method-node (name args)
   (let ((arg-string (string-join (loop for arg in args
 				       for arg-list = (second arg)
 				       collect (format "%s %s"
@@ -99,10 +99,18 @@
  	   (loop for signal in (dbus-introspect-get-signal-names bus service path interface)
  		 collect
  		 (let* ((definition (dbus-introspect-get-signal bus service path interface signal)))
-		   (widget-convert 'tree-widget :tag (dbus-explore-format-signal-node signal
-										      ;; get rid of strings in the xml element, only return the args nodes
-										      (remove-if-not 'consp (subseq definition 2))))))))
-      (append properties))))
+		   (widget-convert 'item :tag (concat "S: " (dbus-explore-format-signal/method-node signal
+										       ;; get rid of strings in the xml element, only return the args nodes
+												    (remove-if-not 'consp (subseq definition 2))))))))
+	  ;; This is a bit unfortunate duplicate code.  Could be eliminated when working from the all-objects path, bypassing the abstractions.
+	  (methods
+ 	   (loop for method in (dbus-introspect-get-method-names bus service path interface)
+ 		 collect
+ 		 (let* ((definition (dbus-introspect-get-method bus service path interface method)))
+		   (widget-convert 'item :tag (concat "M: " (dbus-explore-format-signal/method-node method
+										       ;; get rid of strings in the xml element, only return the args nodes
+										       (remove-if-not 'consp (subseq definition 2)))))))))
+      (append properties methods signals))))
 ;; #+END_SRC
 
 ;; **** Properties
