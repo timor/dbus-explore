@@ -1,9 +1,16 @@
 ;;; dbus-explore.el --- D-Bus tree-explorer  -*- lexical-binding: t; -*-
 
-;;; About:
+;;; Header:
+
+;; unlicensed
+
+;; Author: timor (timor.dd@googlemail.com)
+;; Version: 1.0
+;; URL: https://github.com/timor/dbus-explor
+
+;;; Commentary:
 ;; This is a D-Bus explorer for emacs.
 
-;;; Usage:
 ;; As usual, add the file to load path and do a
 ;; =(require 'dbus-explore)=
 
@@ -186,4 +193,5 @@
 ;;; Footer:
 ;; #+BEGIN_SRC emacs-lisp
 (provide 'dbus-explore)
+;; dbus-explore.el ends here
 ;; #+END_SRC
