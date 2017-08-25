@@ -28,6 +28,7 @@
   '( "org.freedesktop.DBus.Properties"
      "org.freedesktop.DBus.Introspectable"
      "org.freedesktop.DBus.Peer"
+     "org.freedesktop.DBus.ObjectManager"
      ))
 ;; #+END_SRC
 ;; ** Tree Widget Creation
