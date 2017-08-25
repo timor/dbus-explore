@@ -6,7 +6,7 @@
 
 ;; Author: timor (timor.dd@googlemail.com)
 ;; Version: 1.0
-;; URL: https://github.com/timor/dbus-explor
+;; URL: https://github.com/timor/dbus-explore
 
 ;;; Commentary:
 ;; This is a D-Bus explorer for emacs.
