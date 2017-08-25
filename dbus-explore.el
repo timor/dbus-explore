@@ -15,10 +15,20 @@
 (defun make-dbus-explore-node-expander (bus service path)
   "Create an expander that will create the next level of nodes of a node."
   (lambda (widget)
-    (loop for node in (dbus-introspect-get-node-names bus service path)
-	  for new-path = (concat path "/" node)
-	  collect
-	  (widget-convert 'tree-widget :tag node :expander (make-dbus-explore-node-expander bus service new-path)))))
+    (let ((child-nodes
+	   (loop for node in (dbus-introspect-get-node-names bus service path)
+		 for new-path = (concat path "/" node)
+		 collect
+		 (widget-convert 'tree-widget :tag node :expander (make-dbus-explore-node-expander bus service new-path))))
+	  (interfaces
+	   (loop for iface in (dbus-introspect-get-interface-names bus service path)
+		 collect
+		 (widget-convert 'tree-widget :tag (concat "I: " iface) :expander (dbus-explore-make-interface-expander bus service path iface)))))
+      (append child-nodes interfaces))))
+
+(defun dbus-explore-make-interface-expander (bus service path interface)
+  (lambda (widget)
+    nil))
 
 (defun dbus-explore-create-top-widgets (bus)
   (loop for name in (dbus-list-known-names bus) do
