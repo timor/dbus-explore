@@ -3,6 +3,13 @@
 * WidgetTree
 #+BEGIN_SRC emacs-lisp
 
+(defvar dbus-explore-hide-standard-interfaces t)
+(defconst dbus-explore-standard-interfaces
+  '( "org.freedesktop.DBus.Properties"
+     "org.freedesktop.DBus.Introspectable"
+     "org.freedesktop.DBus.Peer"
+     ))
+
 (defun make-dbus-explore-service-expander (bus service)
   "Create an expander that will create an overview over the services nodes."
   (lambda (widget)
@@ -22,6 +29,8 @@
 		 (widget-convert 'tree-widget :tag node :expander (make-dbus-explore-node-expander bus service new-path))))
 	  (interfaces
 	   (loop for iface in (dbus-introspect-get-interface-names bus service path)
+		 unless (and dbus-explore-hide-standard-interfaces
+			   (member iface dbus-explore-standard-interfaces))
 		 collect
 		 (widget-convert 'tree-widget :tag (concat "I: " iface) :expander (dbus-explore-make-interface-expander bus service path iface)))))
       (append child-nodes interfaces))))
