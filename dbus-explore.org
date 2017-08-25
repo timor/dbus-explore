@@ -4,6 +4,9 @@
 This is a D-Bus explorer for emacs.
 
 * Usage
+As usual, add the file to load path and do a
+=(require 'dbus-explore)=
+
 =M-: (dbus-explore :system)=
 or
 =M-: (dbus-explore :session)=
@@ -90,5 +93,9 @@ TODO: make this interactive and fix running doc.
   (with-current-buffer (generate-new-buffer (format "*D-Bus explorer%s*" bus))
     (dbus-explore-create-top-widgets bus)
     (switch-to-buffer (current-buffer))))
+#+END_SRC
 
+* Footer
+#+BEGIN_SRC emacs-lisp
+(provide 'dbus-explore)
 #+END_SRC
