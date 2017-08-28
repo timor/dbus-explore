@@ -25,6 +25,7 @@ widget in a separate buffer, with one top-level object for each known
 D-Bus object.
 #+BEGIN_SRC emacs-lisp
 (require 'tree-widget)
+(require 'dbus)
 
 #+END_SRC
 ** Variables

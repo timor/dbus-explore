@@ -25,6 +25,7 @@
 ;; D-Bus object.
 ;; #+BEGIN_SRC emacs-lisp
 (require 'tree-widget)
+(require 'dbus)
 
 ;; #+END_SRC
 ;; ** Variables
