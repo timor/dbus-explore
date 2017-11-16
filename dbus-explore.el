@@ -184,6 +184,7 @@
 ;; =:session= or =:system=, and will use the corresponding bus.
 ;; #+BEGIN_SRC emacs-lisp
 (defun dbus-explore (bus)
+;;;###autoload
   (interactive (list
                 (intern (completing-read "Choose bus: " '(:session :system)))))
   (with-current-buffer (generate-new-buffer (format "*D-Bus explorer%s*" bus))
