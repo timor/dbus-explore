@@ -183,8 +183,8 @@
 ;; This is actually the main user entry point.  The argument =bus= is either
 ;; =:session= or =:system=, and will use the corresponding bus.
 ;; #+BEGIN_SRC emacs-lisp
-(defun dbus-explore (bus)
 ;;;###autoload
+(defun dbus-explore (bus)
   (interactive (list
                 (intern (completing-read "Choose bus: " '(:session :system)))))
   (with-current-buffer (generate-new-buffer (format "*D-Bus explorer%s*" bus))
