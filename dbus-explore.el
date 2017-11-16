@@ -14,9 +14,8 @@
 ;; As usual, add the file to load path and do a
 ;; =(require 'dbus-explore)=
 
-;; =M-: (dbus-explore :system)=
-;; or
-;; =M-: (dbus-explore :session)=
+;; To start, run the command =dbus-explore= and choose either =:session= or
+;; =:system= as a bus to explore.
 
 ;; Click the Nodes in the explorer Buffer to browse the objects and their interfaces.
 ;;; Implementation:
@@ -182,9 +181,12 @@
  	(widget-create 'tree-widget :tag name :expander (make-dbus-explore-service-expander bus name))))
 ;; #+END_SRC
 
-;; TODO: make this interactive and fix running doc.
+;; This is actually the main user entry point.  The argument =bus= is either
+;; =:session= or =:system=, and will use the corresponding bus.
 ;; #+BEGIN_SRC emacs-lisp
 (defun dbus-explore (bus)
+  (interactive (list
+                (intern (completing-read "Choose bus: " '(:session :system)))))
   (with-current-buffer (generate-new-buffer (format "*D-Bus explorer%s*" bus))
     (dbus-explore-create-top-widgets bus)
     (widget-setup)
