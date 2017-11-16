@@ -10,7 +10,6 @@
 
 ;;; Commentary:
 ;; This is a D-Bus explorer for emacs.
-
 ;; As usual, add the file to load path and do a
 ;; =(require 'dbus-explore)=
 
