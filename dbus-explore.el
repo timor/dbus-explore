@@ -5,7 +5,7 @@
 ;; unlicensed
 
 ;; Author: timor (timor.dd@googlemail.com)
-;; Version: 1.1
+;; Version: 1.2
 ;; URL: https://github.com/timor/dbus-explore
 
 ;;; Commentary:
@@ -18,18 +18,18 @@
 
 ;; Click the Nodes in the explorer Buffer to browse the objects and their interfaces.
 ;;; Implementation:
+
+;; * Interactive Emacs DBus Explorer
+
 ;; D-Bus objects are represented in a tree fashion, using emacs' tree
 ;; widget in a separate buffer, with one top-level object for each known
 ;; D-Bus object.
-;; #+BEGIN_SRC emacs-lisp
 (require 'tree-widget)
 (require 'dbus)
 (require 'cl-lib)
 
-;; #+END_SRC
 ;; ** Variables
 ;; All DBus objects implement some standard interfaces, hide them per default.
-;; #+BEGIN_SRC emacs-lisp
 (defvar dbus-explore-hide-standard-interfaces t)
 (defconst dbus-explore-standard-interfaces
   '( "org.freedesktop.DBus.Properties"
@@ -37,7 +37,6 @@
      "org.freedesktop.DBus.Peer"
      "org.freedesktop.DBus.ObjectManager"
      ))
-;; #+END_SRC
 ;; ** Tree Widget Creation
 ;; The tree items are created on button-click time by providing an
 ;; expander function to an item.  The general pattern here is to create
@@ -47,7 +46,6 @@
 ;; arguments for the next handler-creation.
 
 ;; The top-level nodes are services, and expand into nodes.
-;; #+BEGIN_SRC emacs-lisp
 (defun make-dbus-explore-service-expander (bus service)
   "Create an expander that will create an overview over the services nodes."
   (lambda (widget)
@@ -56,10 +54,8 @@
 	    for new-path = (concat path node)
 	    collect
 	    (widget-convert 'tree-widget :tag node :expander (make-dbus-explore-node-expander bus service new-path))))))
-;; #+END_SRC
 
 ;; All other nodes are checked for sub-nodes and interfaces.
-;; #+BEGIN_SRC emacs-lisp
 (defun make-dbus-explore-node-expander (bus service path)
   "Create an expander that will create the next level of nodes of a node."
   (lambda (widget)
@@ -75,16 +71,14 @@
 		 collect
 		 (widget-convert 'tree-widget :tag (concat "I: " iface) :expander (dbus-explore-make-interface-expander bus service path iface)))))
       (append child-nodes interfaces))))
-;; #+END_SRC
 
 ;; *** Interfaces
 ;; Interfaces can have multiple kinds of information: Signals, Properties
 ;; and Methods.
 
-;; For signals and methods, emacs returns a parsed xml-expression.  This is formatted
-;; into a signature as follows:
+;; For signals and methods, emacs returns a parsed xml-expression.
 
-;; #+BEGIN_SRC emacs-lisp
+;; The args part is decomposed into a list of ~((name type))~ pairs
 (defun dbus-explore-method-call-args (args)
   "Create a list of arg specs to call a method from the ARGS argument structure."
   (loop for arg in args
@@ -94,6 +88,8 @@
         unless (string-equal "out" (alist-get 'direction arg-list))
         collect (list name type)))
 
+;; This is formatted
+;; into a signature as follows:
 (defun dbus-explore-format-signal/method-node (name args)
   (destructuring-bind (out-args in-args)
       (loop for arg in args
@@ -109,8 +105,10 @@
     (format "%s(%s)%s" name (string-join in-args ", ")
 	    (if out-args (format " = (%s)" (string-join out-args ", "))
 	      ""))))
-;; #+END_SRC
 
+;; This method is the click handler for the "Call" buttons in the Method
+;; items.  It interactively queries for the method arguments and calls the
+;; actual DBus Method
 (defun dbus-explore-query-call-method (bus service path interface method args)
   (let ((params
          (loop for (name type) in args
@@ -118,7 +116,8 @@
     (message "Result('%s'): '%s'" method
              (apply 'dbus-call-method bus service path interface method params))))
 
-;; #+BEGIN_SRC emacs-lisp
+;; The tree is built by providing expander closures.  These are the expanders
+;; for the Interface Nodes, which list the properties, methods and signals.
 (defun dbus-explore-make-interface-expander (bus service path interface)
   (lambda (widget)
     (let ((properties
@@ -148,14 +147,12 @@
                                         (apply 'dbus-explore-query-call-method (widget-get button :value) ))
                               )))))
       (append properties methods signals))))
-;; #+END_SRC
 
 ;; **** Properties
 ;; Properties can be somewhat complex to display due to D-Bus' flexible
 ;; type system.  Currently, we infer only arrays of simple stuff and
 ;; dictionaries, by checking for conses and nested conses, respectively
 
-;; #+BEGIN_SRC emacs-lisp
 (defun dbus-explore-make-property-item (bus service path interface property value)
   "Helper that gets called during interface expansion."
   (let* ((type (if (consp value)
@@ -191,22 +188,18 @@
 	  (widget-convert 'item :tag (format "%s: %s" key (if (listp val)
 								     (car val)
 								   val))))))
-;; #+END_SRC
 
 ;; ** Initialization
 
 ;; To begin processing, simply create a (collapsed) tree-widget for each
 ;; discovered service on the bus.
 
-;; #+BEGIN_SRC emacs-lisp
 (defun dbus-explore-create-top-widgets (bus)
     (loop for name in (dbus-list-known-names bus) do
  	(widget-create 'tree-widget :tag name :expander (make-dbus-explore-service-expander bus name))))
-;; #+END_SRC
 
 ;; This is actually the main user entry point.  The argument =bus= is either
 ;; =:session= or =:system=, and will use the corresponding bus.
-;; #+BEGIN_SRC emacs-lisp
 ;;;###autoload
 (defun dbus-explore (bus)
   (interactive (list
@@ -216,10 +209,7 @@
     (widget-setup)
     (widget-minor-mode 1)
     (switch-to-buffer (current-buffer))))
-;; #+END_SRC
 
 ;;; Footer:
-;; #+BEGIN_SRC emacs-lisp
 (provide 'dbus-explore)
 ;; dbus-explore.el ends here
-;; #+END_SRC
