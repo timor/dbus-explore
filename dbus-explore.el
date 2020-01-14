@@ -24,6 +24,7 @@
 ;; #+BEGIN_SRC emacs-lisp
 (require 'tree-widget)
 (require 'dbus)
+(require 'cl-lib)
 
 ;; #+END_SRC
 ;; ** Variables
@@ -114,7 +115,7 @@
  		 (let* ((definition (dbus-introspect-get-signal bus service path interface signal)))
 		   (widget-convert 'item :tag (concat "S: " (dbus-explore-format-signal/method-node signal
 										       ;; get rid of strings in the xml element, only return the args nodes
-												    (remove-if-not 'consp (subseq definition 2))))))))
+												    (cl-remove-if-not 'consp (cl-subseq definition 2))))))))
 	  ;; This is a bit unfortunate duplicate code.  Could be eliminated when working from the all-objects path, bypassing the abstractions.
 	  (methods
  	   (loop for method in (dbus-introspect-get-method-names bus service path interface)
@@ -122,7 +123,7 @@
  		 (let* ((definition (dbus-introspect-get-method bus service path interface method)))
 		   (widget-convert 'item :tag (concat "M: " (dbus-explore-format-signal/method-node method
 										       ;; get rid of strings in the xml element, only return the args nodes
-										       (remove-if-not 'consp (subseq definition 2)))))))))
+										       (cl-remove-if-not 'consp (cl-subseq definition 2)))))))))
       (append properties methods signals))))
 ;; #+END_SRC
 
