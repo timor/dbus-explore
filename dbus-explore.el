@@ -190,6 +190,7 @@
   (with-current-buffer (generate-new-buffer (format "*D-Bus explorer%s*" bus))
     (dbus-explore-create-top-widgets bus)
     (widget-setup)
+    (widget-minor-mode 1)
     (switch-to-buffer (current-buffer))))
 ;; #+END_SRC
 

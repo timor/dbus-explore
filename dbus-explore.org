@@ -10,7 +10,6 @@ URL: https://github.com/timor/dbus-explore
 
 * Commentary
 This is a D-Bus explorer for emacs.
-
 As usual, add the file to load path and do a
 =(require 'dbus-explore)=
 
@@ -191,6 +190,7 @@ This is actually the main user entry point.  The argument =bus= is either
   (with-current-buffer (generate-new-buffer (format "*D-Bus explorer%s*" bus))
     (dbus-explore-create-top-widgets bus)
     (widget-setup)
+    (widget-minor-mode 1)
     (switch-to-buffer (current-buffer))))
 #+END_SRC
 
