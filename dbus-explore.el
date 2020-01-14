@@ -85,6 +85,15 @@
 ;; into a signature as follows:
 
 ;; #+BEGIN_SRC emacs-lisp
+(defun dbus-explore-method-call-args (args)
+  "Create a list of arg specs to call a method from the ARGS argument structure."
+  (loop for arg in args
+        for arg-list = (second arg)
+        for type = (alist-get 'type arg-list)
+        for name = (alist-get 'name arg-list)
+        unless (string-equal "out" (alist-get 'direction arg-list))
+        collect (list name type)))
+
 (defun dbus-explore-format-signal/method-node (name args)
   (destructuring-bind (out-args in-args)
       (loop for arg in args
@@ -102,28 +111,42 @@
 	      ""))))
 ;; #+END_SRC
 
+(defun dbus-explore-query-call-method (bus service path interface method args)
+  (let ((params
+         (loop for (name type) in args
+               collect (read-minibuffer (format "Value for argument '%s', type '%s': " name type)))))
+    (message "Result('%s'): '%s'" method
+             (apply 'dbus-call-method bus service path interface method params))))
+
 ;; #+BEGIN_SRC emacs-lisp
 (defun dbus-explore-make-interface-expander (bus service path interface)
   (lambda (widget)
     (let ((properties
- 	   (loop for (property . value) in (dbus-get-all-properties bus service path interface)
- 		 collect
- 		 (dbus-explore-make-property-item bus service path interface property value)))
- 	  (signals
- 	   (loop for signal in (dbus-introspect-get-signal-names bus service path interface)
- 		 collect
- 		 (let* ((definition (dbus-introspect-get-signal bus service path interface signal)))
-		   (widget-convert 'item :tag (concat "S: " (dbus-explore-format-signal/method-node signal
-										       ;; get rid of strings in the xml element, only return the args nodes
-												    (cl-remove-if-not 'consp (cl-subseq definition 2))))))))
-	  ;; This is a bit unfortunate duplicate code.  Could be eliminated when working from the all-objects path, bypassing the abstractions.
-	  (methods
- 	   (loop for method in (dbus-introspect-get-method-names bus service path interface)
- 		 collect
- 		 (let* ((definition (dbus-introspect-get-method bus service path interface method)))
-		   (widget-convert 'item :tag (concat "M: " (dbus-explore-format-signal/method-node method
-										       ;; get rid of strings in the xml element, only return the args nodes
-										       (cl-remove-if-not 'consp (cl-subseq definition 2)))))))))
+           (loop
+            for (property . value) in (dbus-get-all-properties bus service path interface)
+            collect
+            (dbus-explore-make-property-item bus service path interface property value)))
+          (signals
+           (loop
+            for signal in (dbus-introspect-get-signal-names bus service path interface)
+            collect
+            (let* ((definition (dbus-introspect-get-signal bus service path interface signal)))
+              (widget-convert 'item :tag (concat "S: " (dbus-explore-format-signal/method-node signal
+                                                                                               ;; get rid of strings in the xml element, only return the args nodes
+                                                                                               (cl-remove-if-not 'consp (cl-subseq definition 2))))))))
+          ;; This is a bit unfortunate duplicate code.  Could be eliminated when working from the all-objects path, bypassing the abstractions.
+          (methods
+           (loop
+            for method in (dbus-introspect-get-method-names bus service path interface)
+            collect
+            (let* ((definition (dbus-introspect-get-method bus service path interface method))
+                   ;; get rid of strings in the xml element, only return the args nodes
+                   (args-struct (cl-remove-if-not 'consp (cl-subseq definition 2))))
+              (widget-convert 'push-button :format "%t %[Call%]\n" :tag (concat "M: " (dbus-explore-format-signal/method-node method args-struct))
+                              :value (list bus service path interface method (dbus-explore-method-call-args args-struct))
+                              :notify (lambda (button &rest ignore)
+                                        (apply 'dbus-explore-query-call-method (widget-get button :value) ))
+                              )))))
       (append properties methods signals))))
 ;; #+END_SRC
 

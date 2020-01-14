@@ -102,6 +102,15 @@ into a signature as follows:
 	      ""))))
 #+END_SRC
 
+Method Items can be clicked to prompt for arguments and call the method.
+
+#+begin_src emacs-lisp
+(defun dbus-explore-make-method-button (name bus service path interface)
+  (create-widget 'push-button :notify (lambda (button)
+                                        (message "Would call: bus: %s, service: %s, path: %s, interface: %s, name: %s" bus service path interface name)
+                                        )))
+#+end_src
+
 #+BEGIN_SRC emacs-lisp
 (defun dbus-explore-make-interface-expander (bus service path interface)
   (lambda (widget)
