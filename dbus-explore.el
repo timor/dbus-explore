@@ -113,6 +113,7 @@
   (let ((params
          (loop for (name type) in args
                collect (read-minibuffer (format "Value for argument '%s', type '%s': " name type)))))
+    (kill-new (format "%S" `(dbus-call-method ,bus ,service ,path ,interface ,method ,@params)))
     (message "Result('%s'): '%s'" method
              (apply 'dbus-call-method bus service path interface method params))))
 
