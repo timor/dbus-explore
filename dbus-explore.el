@@ -116,6 +116,12 @@
     (message "Result('%s'): '%s'" method
              (apply 'dbus-call-method bus service path interface method params))))
 
+(defun dbus-explore-query-send-signal (bus service path interface signal args)
+  (let ((params
+         (loop for (name type) in args
+               collect (read-minibuffer (format "Value for argument '%s', type '%s': " name type)))))
+    (apply 'dbus-send-signal bus service path interface signal params)))
+
 ;; The tree is built by providing expander closures.  These are the expanders
 ;; for the Interface Nodes, which list the properties, methods and signals.
 (defun dbus-explore-make-interface-expander (bus service path interface)
@@ -129,17 +135,19 @@
            (loop
             for signal in (dbus-introspect-get-signal-names bus service path interface)
             collect
-            (let* ((definition (dbus-introspect-get-signal bus service path interface signal)))
-              (widget-convert 'item :tag (concat "S: " (dbus-explore-format-signal/method-node signal
-                                                                                               ;; get rid of strings in the xml element, only return the args nodes
-                                                                                               (cl-remove-if-not 'consp (cl-subseq definition 2))))))))
+            (let* ((definition (dbus-introspect-get-signal bus service path interface signal))
+                   ;; get rid of strings in the xml element, only return the args nodes
+                   (args-struct (cl-remove-if-not 'consp (cl-subseq definition 2))))
+              (widget-convert 'push-button :format "%t %[Send%]\n" :tag (concat "S: " (dbus-explore-format-signal/method-node signal args-struct))
+                              :value (list bus service path interface signal (dbus-explore-method-call-args args-struct))
+                              :notify (lambda (button &rest ignore)
+                                        (apply 'dbus-explore-query-send-signal (widget-get button :value)))))))
           ;; This is a bit unfortunate duplicate code.  Could be eliminated when working from the all-objects path, bypassing the abstractions.
           (methods
            (loop
             for method in (dbus-introspect-get-method-names bus service path interface)
             collect
             (let* ((definition (dbus-introspect-get-method bus service path interface method))
-                   ;; get rid of strings in the xml element, only return the args nodes
                    (args-struct (cl-remove-if-not 'consp (cl-subseq definition 2))))
               (widget-convert 'push-button :format "%t %[Call%]\n" :tag (concat "M: " (dbus-explore-format-signal/method-node method args-struct))
                               :value (list bus service path interface method (dbus-explore-method-call-args args-struct))
