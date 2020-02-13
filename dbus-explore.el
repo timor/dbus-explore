@@ -5,7 +5,7 @@
 ;; unlicensed
 
 ;; Author: timor (timor.dd@googlemail.com)
-;; Version: 1.2
+;; Version: 1.3
 ;; URL: https://github.com/timor/dbus-explore
 
 ;;; Commentary:
