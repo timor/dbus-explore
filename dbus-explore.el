@@ -109,10 +109,17 @@
 ;; This method is the click handler for the "Call" buttons in the Method
 ;; items.  It interactively queries for the method arguments and calls the
 ;; actual DBus Method
+
+(defun dbus-explore-collect-args (args)
+  (cl-loop for (name type) in args
+           for input = (read-minibuffer (format "Value for argument '%s', type '%s': " name type))
+           append (if (string= type "o")
+                          (list :object-path input)
+                        (list input))))
+
+;; DOING: If an object is of type "o", then read a string and pass :object-path in front of it
 (defun dbus-explore-query-call-method (bus service path interface method args)
-  (let ((params
-         (loop for (name type) in args
-               collect (read-minibuffer (format "Value for argument '%s', type '%s': " name type)))))
+  (let ((params (dbus-explore-collect-args args)))
     (kill-new (format "%S" `(dbus-call-method ,bus ,service ,path ,interface ,method ,@params)))
     (message "Result('%s'): '%s'" method
              (apply 'dbus-call-method bus service path interface method params))))
