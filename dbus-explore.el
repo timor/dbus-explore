@@ -144,8 +144,8 @@
             for signal in (dbus-introspect-get-signal-names bus service path interface)
             collect
             (let* ((definition (dbus-introspect-get-signal bus service path interface signal))
-                   ;; get rid of strings in the xml element, only return the args nodes
-                   (args-struct (cl-remove-if-not 'consp (cl-subseq definition 2))))
+                   ;; get rid of strings and annotations, only return the args nodes
+                   (args-struct (cl-remove-if-not (lambda (it) (eq (car-safe it) 'arg)) (cl-subseq definition 2))))
               (widget-convert 'push-button :format "%t %[Send%]\n" :tag (concat "S: " (dbus-explore-format-signal/method-node signal args-struct))
                               :value (list bus service path interface signal (dbus-explore-method-call-args args-struct))
                               :notify (lambda (button &rest ignore)
@@ -156,7 +156,7 @@
             for method in (dbus-introspect-get-method-names bus service path interface)
             collect
             (let* ((definition (dbus-introspect-get-method bus service path interface method))
-                   (args-struct (cl-remove-if-not 'consp (cl-subseq definition 2))))
+                   (args-struct (cl-remove-if-not (lambda (it) (eq (car-safe it) 'arg)) (cl-subseq definition 2))))
               (widget-convert 'push-button :format "%t %[Call%]\n" :tag (concat "M: " (dbus-explore-format-signal/method-node method args-struct))
                               :value (list bus service path interface method (dbus-explore-method-call-args args-struct))
                               :notify (lambda (button &rest ignore)
